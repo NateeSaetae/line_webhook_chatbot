@@ -16,7 +16,7 @@ app.use(express.json());
 const API_KEY = process.env.WATSONX_API_KEY;
 const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
+const IAM_URL = "https://iam.cloud.ibm.com/identity/token";
 
 // ================================
 // 🧩 Function: Verify LINE Signature
@@ -37,8 +37,12 @@ async function getIamToken() {
   console.log("🔹 Requesting IAM token...");
   const resp = await fetch(IAM_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ apikey: API_KEY }),
+    headers: { 
+        // 1. 🔑 แก้ Content-Type ให้เป็น form-urlencoded
+        "Content-Type": "application/x-www-form-urlencoded" 
+    },
+    // 2. 🔑 แก้ Body ให้เป็น String ในรูปแบบ form-urlencoded
+    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${API_KEY}`,
   });
 
   console.log("  Status:", resp.status);
@@ -46,9 +50,9 @@ async function getIamToken() {
   console.log("  Response:", data);
 
   if (!resp.ok) throw new Error("Failed to get IAM token");
-  if (!data.token) throw new Error("Token not found in IAM response");
+  if (!data.access_token) throw new Error("Token not found in IAM response");
 
-  return data.token;
+  return data.access_token;
 }
 
 // ================================
