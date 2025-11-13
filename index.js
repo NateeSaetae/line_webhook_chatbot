@@ -13,11 +13,10 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ✅ ใช้ IAM URL ตัวเดียวกับเว็บ (global endpoint)
 const API_KEY = process.env.WATSONX_API_KEY;
 const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token"; // 🔹 เปลี่ยนจาก platform.saas.ibm.com เป็นอันนี้
+const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
 
 // ================================
 // 🧩 Function: Verify LINE Signature
@@ -32,19 +31,14 @@ function verifySignature(req) {
 }
 
 // ================================
-// 🔑 Function: Get IAM Token (แก้ให้ใช้ global IAM เหมือนเว็บ)
+// 🔑 Function: Get IAM Token (เหมือน get_iam_token ใน Python)
 // ================================
 async function getIamToken() {
   console.log("🔹 Requesting IAM token...");
-
   const resp = await fetch(IAM_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    // 🔹 ต้องใช้ body แบบนี้ ไม่ใช่ JSON
-    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${API_KEY}`,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apikey: API_KEY }),
   });
 
   console.log("  Status:", resp.status);
@@ -52,18 +46,17 @@ async function getIamToken() {
   console.log("  Response:", data);
 
   if (!resp.ok) throw new Error("Failed to get IAM token");
-  if (!data.access_token) throw new Error("access_token not found in response");
+  if (!data.token) throw new Error("Token not found in IAM response");
 
-  return data.access_token; // 🔹 เปลี่ยนจาก data.token เป็น data.access_token
+  return data.token;
 }
 
 // ================================
-// 🧠 Function: Disable Embed Security
+// 🧠 Function: Disable Embed Security (เหมือน disable_embed_security ใน Python)
 // ================================
 async function disableEmbedSecurity(token) {
   console.log("\n🔹 Disabling embed security...");
   const url = `${API_URL}/instances/${INSTANCE_ID}/v1/embed/secure/config`;
-
   const resp = await fetch(url, {
     method: "POST",
     headers: {
@@ -111,12 +104,6 @@ async function sendToWatsonx(token, userText) {
 
   const data = await resp.json();
   console.log("🧠 Watsonx full response:", JSON.stringify(data, null, 2));
-
-  if (!resp.ok) {
-    console.error("❌ Watsonx API error:", resp.status, data);
-    return `⚠️ Watsonx Error (${resp.status}): ${data.message || "ไม่พบทรัพยากร"}`;
-  }
-
   return (
     data.output?.generic?.[0]?.text ||
     data.output?.text ||
@@ -177,6 +164,7 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
   console.log(`🚀 LINE webhook running on port ${PORT}`);
 
+  // 🔹 ถ้าต้องการปิด security ตอน deploy (เหมือน Python)
   try {
     const token = await getIamToken();
     await disableEmbedSecurity(token);
