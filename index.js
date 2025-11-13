@@ -19,15 +19,14 @@ function verifySignature(req) {
 
 // ✅ ดึง access token จาก IBM IAM API (ใช้กับ Watsonx)
 async function getWatsonToken() {
-  const tokenResp = await fetch("https://iam.us-east.cloud.ibm.com/identity/token", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-    Accept: "application/json",
-  },
-  body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${process.env.WATSONX_API_KEY}`,
-});
-
+  const tokenResp = await fetch("https://iam.cloud.ibm.com/identity/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${process.env.WATSONX_API_KEY}`,
+  });
 
   if (!tokenResp.ok) {
     console.error("❌ Failed to get Watson token:", tokenResp.status);
