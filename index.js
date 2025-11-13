@@ -17,7 +17,7 @@ app.use(express.json());
 const API_KEY = process.env.WATSONX_API_KEY;
 const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.cloud.ibm.com/identity/token"; // 🔹 เปลี่ยนจาก platform.saas.ibm.com เป็นอันนี้
+const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token"; // 🔹 เปลี่ยนจาก platform.saas.ibm.com เป็นอันนี้
 
 // ================================
 // 🧩 Function: Verify LINE Signature
