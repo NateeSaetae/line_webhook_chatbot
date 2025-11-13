@@ -13,15 +13,17 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const API_KEY = process.env.WATSONX_API_KEY;
+const API_KEY = process.env.WATSONX_API_KEY; // ควรเป็น API Key สำหรับ IBM Cloud IAM
 const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
+// 💡 แก้ไข: ใช้ IAM URL ของ IBM Cloud ทั่วไปที่โค้ดใน Script ใช้ (มักเป็น us-south)
+const IAM_SERVICE_URL = "https://iam.cloud.ibm.com/identity/token"; 
 
 // ================================
 // 🧩 Function: Verify LINE Signature
 // ================================
 function verifySignature(req) {
+  // LINE Signature Verification Logic
   const body = JSON.stringify(req.body);
   const hash = crypto
     .createHmac("sha256", process.env.LINE_CHANNEL_SECRET)
@@ -31,28 +33,35 @@ function verifySignature(req) {
 }
 
 // ================================
-// 🔑 Function: Get IAM Token (เหมือน get_iam_token ใน Python)
+// 🔑 Function: Get IAM Token (แก้ไขแล้ว)
 // ================================
 async function getIamToken() {
-  console.log("🔹 Requesting IAM token...");
-  const resp = await fetch(IAM_URL, {
+  console.log("🔹 Requesting IAM token from:", IAM_SERVICE_URL);
+  
+  // 💡 แก้ไข: เปลี่ยนวิธีการส่ง body ให้เป็น application/x-www-form-urlencoded
+  const resp = await fetch(IAM_SERVICE_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ apikey: API_KEY }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${API_KEY}`,
   });
 
-  console.log("  Status:", resp.status);
+  console.log("  Status:", resp.status);
   const data = await resp.json();
-  console.log("  Response:", data);
+  console.log("  Response keys:", Object.keys(data));
+  
+  if (!resp.ok) {
+    console.error("  Error Response:", data);
+    throw new Error("Failed to get IAM token: " + (data.error || resp.statusText));
+  }
+  
+  // IBM IAM Token endpoint จะคืนค่า access_token
+  if (!data.access_token) throw new Error("Access token not found in IAM response");
 
-  if (!resp.ok) throw new Error("Failed to get IAM token");
-  if (!data.token) throw new Error("Token not found in IAM response");
-
-  return data.token;
+  return data.access_token;
 }
 
 // ================================
-// 🧠 Function: Disable Embed Security (เหมือน disable_embed_security ใน Python)
+// 🧠 Function: Disable Embed Security
 // ================================
 async function disableEmbedSecurity(token) {
   console.log("\n🔹 Disabling embed security...");
@@ -70,11 +79,12 @@ async function disableEmbedSecurity(token) {
     }),
   });
 
-  console.log("  Status:", resp.status);
+  console.log("  Status:", resp.status);
   try {
-    console.log("  Response JSON:", await resp.json());
+    const jsonResponse = await resp.json();
+    console.log("  Response JSON:", jsonResponse);
   } catch {
-    console.log("  Raw response:", await resp.text());
+    console.log("  Raw response:", await resp.text());
   }
 
   if (![200, 201].includes(resp.status)) {
@@ -139,6 +149,7 @@ app.post("/webhook", async (req, res) => {
         });
       } catch (err) {
         console.error("❌ Error handling message:", err);
+        // ตอบกลับ LINE เมื่อเกิดข้อผิดพลาด
         await fetch("https://api.line.me/v2/bot/message/reply", {
           method: "POST",
           headers: {
