@@ -57,18 +57,25 @@ app.post("/webhook", async (req, res) => {
 
         // 🔹 เรียก Watsonx Orchestrate API ด้วย Bearer Token
         const watsonResp = await fetch(
-          "https://api.dl.watson-orchestrate.ibm.com/instances/20251009-0345-0487-507c-160b3a16c747/v1/messages",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
+        "https://api.dl.watson-orchestrate.ibm.com/instances/20251009-0345-0487-507c-160b3a16c747/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            agent: {
+              id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
+              environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
             },
-            body: JSON.stringify({
-              input: { text: userText },
-            }),
-          }
-        );
+            input: {
+              type: "text",
+              text: userText,
+            },
+          }),
+        }
+      );
 
         const watsonData = await watsonResp.json();
         console.log("🧠 Watsonx full response:", JSON.stringify(watsonData, null, 2));
