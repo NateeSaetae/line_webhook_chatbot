@@ -37,18 +37,22 @@ async function getIamToken() {
   console.log("🔹 Requesting IAM token...");
   const resp = await fetch(IAM_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ apikey: API_KEY }),
-  });
+    headers: { 
+        // 1. 🔑 แก้ Content-Type ให้เป็น form-urlencoded
+        "Content-Type": "application/x-www-form-urlencoded" 
+    },
+    // 2. 🔑 แก้ Body ให้เป็น String ในรูปแบบ form-urlencoded
+    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${API_KEY}`,
+  });
 
   console.log("  Status:", resp.status);
   const data = await resp.json();
   console.log("  Response:", data);
 
   if (!resp.ok) throw new Error("Failed to get IAM token");
-  if (!data.token) throw new Error("Token not found in IAM response");
+  if (!data.access_token) throw new Error("Token not found in IAM response");
 
-  return data.token;
+  return data.access_token;
 }
 
 // ================================
