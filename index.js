@@ -86,24 +86,34 @@ async function disableEmbedSecurity(token) {
 // 💬 Function: Send message to Watsonx
 // ================================
 async function sendToWatsonx(token, userText) {
-  const url = `${API_URL}/instances/${INSTANCE_ID}/v1/messages`;
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      agent: {
-        id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
-        environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
-      },
-      input: { type: "text", text: userText },
-    }),
-  });
+  const url = `${API_URL}/instances/${INSTANCE_ID}/v1/messages`;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      agent: {
+        id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
+        environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
+      },
+      input: { type: "text", text: userText },
+    }),
+  });
 
-  const data = await resp.json();
-  console.log("🧠 Watsonx full response:", JSON.stringify(data, null, 2));
+    // 💡 การแก้ไข: ตรวจสอบ Status ก่อน และอ่าน Response เป็น Text
+    if (!resp.ok) {
+        // ถ้า Status เป็น 4xx หรือ 5xx ให้อ่าน Response เป็น Text เพื่อดู Error Message
+        const errorText = await resp.text();
+        console.error(`❌ Watsonx API failed with Status ${resp.status}`);
+        // แสดงข้อความ Error ที่แท้จริง (อาจเป็น HTML)
+        console.error("🧠 Raw Error Response:", errorText.substring(0, 300) + "...");
+        throw new Error(`Watsonx API Call failed: Status ${resp.status}`);
+    }
+
+  const data = await resp.json();
+  console.log("🧠 Watsonx full response:", JSON.stringify(data, null, 2));
   return (
     data.output?.generic?.[0]?.text ||
     data.output?.text ||
