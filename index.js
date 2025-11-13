@@ -95,8 +95,8 @@ async function sendToWatsonx(token, userText) {
     },
     body: JSON.stringify({
       agent: {
-        id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
-        environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
+        agentId: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
+        agentEnvironmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
       },
       input: { type: "text", text: userText },
     }),
