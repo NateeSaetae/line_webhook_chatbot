@@ -2,7 +2,6 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 
 const express = require("express");
 const crypto = require("crypto");
-const fetch = require("node-fetch");
 require("dotenv").config();
 
 const app = express();
