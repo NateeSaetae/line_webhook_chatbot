@@ -16,7 +16,7 @@ app.use(express.json());
 const API_KEY = process.env.WATSONX_API_KEY;
 const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.cloud.ibm.com/identity/toke";
+const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
 
 // ================================
 // 🧩 Function: Verify LINE Signature
@@ -38,7 +38,7 @@ async function getIamToken() {
   const resp = await fetch(IAM_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ apikey: API_KEY }),
+    body: JSON.stringify({ apikey: API_KEY }),
   });
 
   console.log("  Status:", resp.status);
