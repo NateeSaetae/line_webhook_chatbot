@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 
 const API_KEY = process.env.WATSONX_API_KEY;
-const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
+const API_URL = "https://dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
 const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
 
@@ -95,8 +95,8 @@ async function sendToWatsonx(token, userText) {
     },
     body: JSON.stringify({
       agent: {
-        agentId: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
-        agentEnvironmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
+        id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
+        environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
       },
       input: { type: "text", text: userText },
     }),
