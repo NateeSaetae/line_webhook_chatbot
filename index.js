@@ -44,7 +44,7 @@ async function getIamToken() {
   console.log("🔑 Getting WatsonX IAM token (Orchestrate)...");
 
   try {
-    const response = await fetch("https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token", {
+    const response = await fetch("https://iam.cloud.ibm.com/identity/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
