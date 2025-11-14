@@ -39,33 +39,35 @@ function verifySignature(req) {
 // 🔑 Get Watsonx IAM Token
 // ================================
 async function getIamToken() {
-  console.log("🔑 Getting WatsonX IAM token...");
+  console.log("🔑 Getting WatsonX IAM token (Orchestrate)...");
 
   try {
-    const response = await fetch(IAM_URL, {
+    const response = await fetch("https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        apikey: WATSONX_API_KEY,
-        grant_type: "urn:ibm:params:oauth:grant-type:apikey",
-      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        apikey: WATSONX_API_KEY
+      })
     });
 
     const data = await response.json();
 
-    if (data.access_token) {
+    if (data?.token) {
       console.log("✅ IAM Token retrieved successfully");
-    } else {
-      console.log("❌ Failed to get IAM token:", data);
+      return data.token;
     }
 
-    return data.access_token;
+    console.log("❌ Failed to get IAM token:", data);
+    return null;
 
   } catch (error) {
-    console.log("🔥 ERROR: IAM token request failed:", error);
+    console.log("🔥 ERROR getting IAM token:", error);
     return null;
   }
 }
+
 
 // ================================
 // 💬 Send user text to WatsonX Agent
