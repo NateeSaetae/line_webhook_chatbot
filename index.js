@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 // Watsonx Orchestrate
 const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
 const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
+const IAM_URL = "https://iam.cloud.ibm.com/identity/token";
 
 const AGENT_ID = "d880f3f0-9b4c-4be8-809b-1ce7edc8de23";
 const AGENT_ENV_ID = "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa";
