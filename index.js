@@ -15,7 +15,7 @@ const lineClient = new Client(config);
 
 // --- 2. ตั้งค่า watsonx Orchestrate (แก้ไข URL ที่ถูกต้อง) ---
 // *** ต้องใช้ URL นี้ (หรือ URL ที่ถูกต้องจาก IBM Cloud/AWS) แทน URL ก่อนหน้านี้ ***
-const WX_ORCHESTRATE_BASE_URL = 'https://api.orchestrate.watsonx.ai/v1'; 
+const WX_ORCHESTRATE_BASE_URL = ' https://api.dl.watson-orchestrate.ibm.com/instances/20251009-0345-0487-507c-160b3a16c747'; 
 const WX_PROJECT_ID = 'b0c4b559-9aaa-4e2d-8574-248ff7cd19aa';
 const WX_AGENT_ID = 'd880f3f0-9b4c-4be8-809b-1ce7edc8de23';
 
