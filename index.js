@@ -41,35 +41,38 @@ function verifySignature(req) {
 // 🔑 Get Watsonx IAM Token
 // ================================
 async function getIamToken() {
-  console.log("🔑 Getting WatsonX IAM token (Orchestrate)...");
+  console.log("🔑 Getting WatsonX DL IAM token...");
 
   try {
-    const response = await fetch("https://iam.cloud.ibm.com/identity/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        grant_type: "urn:ibm:params:oauth:grant-type:apikey",
-        apikey: WATSONX_API_KEY
-      })
-    });
+    const response = await fetch(
+      "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          apikey: WATSONX_API_KEY
+        })
+      }
+    );
 
     const data = await response.json();
 
-    if (data?.access_token) {
-      console.log("✅ IAM Token retrieved successfully");
-      return data.access_token;
+    if (data.token) {
+      console.log("✅ DL IAM Token retrieved successfully");
+      return data.token;  // << ใช้ token ไม่ใช่ access_token
     }
 
-    console.log("❌ Failed to get IAM token:", data);
+    console.log("❌ Failed to get DL IAM token:", data);
     return null;
 
   } catch (error) {
-    console.log("🔥 ERROR getting IAM token:", error);
+    console.log("🔥 ERROR getting DL IAM token:", error);
     return null;
   }
 }
+
 
 
 // ================================
