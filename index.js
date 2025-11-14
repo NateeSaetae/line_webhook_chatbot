@@ -50,6 +50,7 @@ async function getIamToken() {
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: new URLSearchParams({
+        grant_type: "urn:ibm:params:oauth:grant-type:apikey",
         apikey: WATSONX_API_KEY
       })
     });
