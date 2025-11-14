@@ -14,9 +14,9 @@ const app = express();
 app.use(express.json());
 
 const API_KEY = process.env.WATSONX_API_KEY;
-const API_URL = "https://api.dl.watson-orchestrate.ibm.com";
-const INSTANCE_ID = "20251002-0812-0913-80e9-342bfb28ec81_20251009-0345-0487-507c-160b3a16c747";
-const IAM_URL = "https://iam.cloud.ibm.com/identity/token";
+const API_URL = "https://dl.watson-orchestrate.ibm.com";
+const INSTANCE_ID = "20251009-0345-0487-507c-160b3a16c747";
+const IAM_URL = "https://iam.platform.saas.ibm.com/siusermgr/api/1.0/apikeys/token";
 
 // ================================
 // 🧩 Function: Verify LINE Signature
@@ -86,34 +86,24 @@ async function disableEmbedSecurity(token) {
 // 💬 Function: Send message to Watsonx
 // ================================
 async function sendToWatsonx(token, userText) {
-  const url = `${API_URL}/instances/${INSTANCE_ID}/v1/messages`;
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      agent: {
-        id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
-        environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
-      },
-      input: { type: "text", text: userText },
-    }),
-  });
+  const url = `${API_URL}/instances/${INSTANCE_ID}/v1/messages`;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      agent: {
+        id: "d880f3f0-9b4c-4be8-809b-1ce7edc8de23",
+        environmentId: "b0c4b559-9aaa-4e2d-8574-248ff7cd19aa",
+      },
+      input: { type: "text", text: userText },
+    }),
+  });
 
-    // 💡 การแก้ไข: ตรวจสอบ Status ก่อน และอ่าน Response เป็น Text
-    if (!resp.ok) {
-        // ถ้า Status เป็น 4xx หรือ 5xx ให้อ่าน Response เป็น Text เพื่อดู Error Message
-        const errorText = await resp.text();
-        console.error(`❌ Watsonx API failed with Status ${resp.status}`);
-        // แสดงข้อความ Error ที่แท้จริง (อาจเป็น HTML)
-        console.error("🧠 Raw Error Response:", errorText.substring(0, 300) + "...");
-        throw new Error(`Watsonx API Call failed: Status ${resp.status}`);
-    }
-
-  const data = await resp.json();
-  console.log("🧠 Watsonx full response:", JSON.stringify(data, null, 2));
+  const data = await resp.json();
+  console.log("🧠 Watsonx full response:", JSON.stringify(data, null, 2));
   return (
     data.output?.generic?.[0]?.text ||
     data.output?.text ||
