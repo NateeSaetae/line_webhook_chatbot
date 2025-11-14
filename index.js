@@ -25,60 +25,73 @@ const WX_AGENT_ID = 'd880f3f0-9b4c-4be8-809b-1ce7edc8de23';
 const userSessionMap = new Map();
 
 // --- 3. ฟังก์ชันสำหรับเรียก watsonx Agent ---
-async function getWatsonXResponse(userId, userMessage) {
-    console.log(`[User: ${userId}] Sending message to watsonx Orchestrate: ${userMessage}`);
+// index.js
 
-    // 1. ดึง Thread ID ถ้ามี
-    const threadId = userSessionMap.get(userId);
-    
-    // 2. กำหนด URL ปลายทาง
-    // Endpoint สำหรับ Agent Run
-    const url = `${WX_ORCHESTRATE_BASE_URL}/projects/${WX_PROJECT_ID}/agent_runs`;
+// ... (require, config, lineClient, WX_ORCHESTRATE_BASE_URL, etc.) ...
+
+// *** ตัวแปรสำหรับเก็บ Access Token และเวลาหมดอายุ ***
+let IAM_ACCESS_TOKEN = null;
+let TOKEN_EXPIRY_TIME = 0; // Unix Timestamp
+
+// --- ฟังก์ชัน 1: สร้างหรือ Refresh Access Token ---
+async function getValidAccessToken() {
+    // 1. ตรวจสอบว่า Token ยังไม่หมดอายุ (เช่น ยังเหลือเวลาใช้งาน > 5 นาที)
+    if (IAM_ACCESS_TOKEN && Date.now() < TOKEN_EXPIRY_TIME - 300000) { // 300000 ms = 5 นาที
+        return IAM_ACCESS_TOKEN;
+    }
+
+    console.log("Refreshing IAM Access Token...");
+    const IAM_URL = 'https://iam.cloud.ibm.com/identity/token';
 
     try {
+        const response = await axios.post(IAM_URL, 
+            new URLSearchParams({
+                'grant_type': 'urn:ibm:params:oauth:grant-type:apikey',
+                'apikey': process.env.WATSONX_API_KEY
+            }).toString(), 
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                }
+            }
+        );
+
+        IAM_ACCESS_TOKEN = response.data.access_token;
+        TOKEN_EXPIRY_TIME = Date.now() + (response.data.expires_in * 1000); // แปลงเป็น ms
+
+        console.log("Access Token refreshed successfully.");
+        return IAM_ACCESS_TOKEN;
+
+    } catch (error) {
+        console.error("CRITICAL ERROR: Failed to refresh IAM Access Token:", error.response ? error.response.data : error.message);
+        throw new Error("Authentication failed with IBM IAM Service.");
+    }
+}
+
+
+// --- ฟังก์ชัน 2: เรียก watsonx Agent โดยใช้ Token ที่ถูกต้อง ---
+async function getWatsonXResponse(userId, userMessage) {
+    // 1. รับ Access Token ที่ถูกต้องก่อน
+    const accessToken = await getValidAccessToken();
+
+    // ... (ส่วนการดึง threadId และ URL เหมือนเดิม) ...
+    
+    try {
         const response = await axios.post(url, {
-            agent_id: WX_AGENT_ID,
-            input: {
-                message: userMessage,
-                // หากมี threadId อยู่แล้ว ให้ส่งไปด้วยเพื่อรักษา Session 
-                ...(threadId && { thread_id: threadId })
-            },
-            // เพิ่มการตั้งค่าอื่นๆ เช่น model_settings, tools_config
+            // ... (Payload เหมือนเดิม) ...
         }, {
             headers: {
-                // ใช้ IAM Key ที่คุณมีเป็น Bearer Token
-                'Authorization': `Bearer ${process.env.WATSONX_API_KEY}`, 
+                // *** ใช้ Access Token ที่แลกมาแทน API Key โดยตรง ***
+                'Authorization': `Bearer ${accessToken}`, 
                 'Content-Type': 'application/json',
-                // หากคุณกำลังรันแบบ Stateless หรือสร้าง Thread ใหม่ คุณอาจต้องระบุ Thread ID ใน Header:
-                // 'X-THREAD-ID': threadId || 'new'
             }
         });
 
-        // 3. บันทึก Thread ID ใหม่เพื่อใช้ในครั้งต่อไป
-        // watsonx จะส่ง thread_id กลับมาใน Response หากมีการสร้างหรือใช้ Thread นั้น
-        const newThreadId = response.data?.thread_id; 
-        if (newThreadId) {
-            userSessionMap.set(userId, newThreadId);
-            console.log(`[User: ${userId}] Session/Thread ID updated: ${newThreadId}`);
-        }
-
-        // 4. ดึงข้อความตอบกลับจาก Response
-        // โครงสร้าง Response อาจแตกต่างกัน แต่ทั่วไปจะอยู่ใน output
-        const agentResponseText = response.data?.output?.response 
-                                  || response.data?.output?.messages?.[0]?.text 
-                                  || "ไม่สามารถรับคำตอบจาก watsonx ได้";
-                                  
-        return agentResponseText;
+        // ... (ส่วนการจัดการ Response และ Session เหมือนเดิม) ...
 
     } catch (error) {
-        // Log Error อย่างละเอียด
-        console.error(`[User: ${userId}] Error calling watsonx Orchestrate API:`, error.response ? error.response.data : error.message);
-        
-        // หากเกิด 401/403 (Unauthorized/Forbidden) อาจต้อง Refresh Token หรือตรวจสอบ IAM Key
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-             return "ขออภัยค่ะ การยืนยันตัวตนกับ watsonx ล้มเหลว กรุณาตรวจสอบ API Key/Token และ Project ID";
-        }
-        
+        // ... (ส่วนจัดการ Error) ...
         return "ขออภัยค่ะ เกิดข้อผิดพลาดในการเชื่อมต่อกับ Agent";
     }
 }
