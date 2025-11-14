@@ -57,9 +57,9 @@ async function getIamToken() {
 
     const data = await response.json();
 
-    if (data?.token) {
+    if (data?.access_token) {
       console.log("✅ IAM Token retrieved successfully");
-      return data.token;
+      return data.access_token;
     }
 
     console.log("❌ Failed to get IAM token:", data);
